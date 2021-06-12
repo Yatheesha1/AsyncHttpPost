@@ -11,21 +11,23 @@ String host = "httpbin.org";
 long currentTime = 0;
 int times;
 
-void respFromServer(void* data, size_t len) {
+void respFromServer(void *args, void* data, size_t len) {
     currentTime = millis();
     char * p1, *p2;
     char * ch = (char*)data;
     ch[len] = '\0';
+    Serial.printf("%s\n", (char*)args);
     Serial.printf("Response --> %s\n", ch);
     Serial.printf("Time --> %d\n", currentTime-times);
 }
 
 void postToServer(String input) {
-
+    char *args = "Sample arg is char message";
     AsyncHttpPost asyncHttpPost;
     asyncHttpPost.setApi(path);
     asyncHttpPost.setHost(host);
     asyncHttpPost.setData(input);
+    asyncHttpPost.setArgs((void*)args);
     asyncHttpPost.setCallback(respFromServer);
 
     times = millis();

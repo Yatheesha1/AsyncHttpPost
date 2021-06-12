@@ -19,6 +19,11 @@ void AsyncHttpPost::setData(String data)
     this->length = data.length();
 }
 
+void AsyncHttpPost::setArgs(void *args)
+{
+    this->args = args;
+}
+
 void AsyncHttpPost::setCallback(pfRespOperator callback)
 {
     this->resp = callback;
@@ -40,6 +45,11 @@ String AsyncHttpPost::getData() {
     return this->data;
 }
 
+void *AsyncHttpPost::getArgs()
+{
+    return this->args;
+}
+
 unsigned int AsyncHttpPost::getLength() {
     return this->length;
 }
@@ -50,16 +60,16 @@ pfRespOperator AsyncHttpPost::getCallback() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Start of http request */
-void AsyncHttpPost::httpPost() {
+bool AsyncHttpPost::httpPost() {
     g_asyncHttpPost = this->getObject();
 
     Serial.printf("\nBody: %s\n", g_asyncHttpPost.getData().c_str());
     if (aClient)                                      /* return client already exists */
-        return;
+        return false;
 
     aClient = new AsyncClient();                      /* initialize client object */
     if (!aClient)                                     /* could not allocate client */
-        return;
+        return false;
 
     aClient->onError([](void * arg, AsyncClient * client, int error) {  /* delete client if has an error in sendind data */
         aClient = NULL;
@@ -73,13 +83,13 @@ void AsyncHttpPost::httpPost() {
         client->onDisconnect([](void * arg, AsyncClient * c) {             /* called after data sent or disconnected */
             aClient = NULL;
             delete c;
-        }, NULL);
+        }, arg);
 
         client->onData([](void * arg, AsyncClient * c, void * data, size_t len) {  /* called once client receives data as response */
             Serial.printf("Response recieved\n");
             pfRespOperator callback = g_asyncHttpPost.getCallback();
-            callback(data, len);
-        }, NULL);
+            callback(arg, data, len);
+        }, arg);
 
         Serial.printf("Generating request\n");
 
@@ -93,7 +103,7 @@ void AsyncHttpPost::httpPost() {
         Serial.printf("Request: %s\n", req.c_str());
         client->write(req.c_str());                             /* send the request */
         yield();
-    }, NULL);
+    }, args);
 
     if (!aClient->connect(g_asyncHttpPost.getHost().c_str(), 80)) {                /* connect to cloud server if not connected */
         Serial.printf("\nHost: %s\n", g_asyncHttpPost.getHost().c_str());
@@ -101,7 +111,10 @@ void AsyncHttpPost::httpPost() {
         AsyncClient * client = aClient;
         aClient = NULL;
         delete client;
+        return false;
     }
+
+    return true;
 }
 /* end of http request */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
