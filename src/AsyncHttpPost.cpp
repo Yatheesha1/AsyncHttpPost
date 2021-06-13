@@ -1,6 +1,6 @@
 #include "AsyncHttpPost.h"
 
-static AsyncClient * aClient = NULL;
+// static AsyncClient * aClient = NULL;
 AsyncHttpPost g_asyncHttpPost;
 
 void AsyncHttpPost::setHost(String host)
@@ -63,6 +63,8 @@ pfRespOperator AsyncHttpPost::getCallback() {
 bool AsyncHttpPost::httpPost() {
     g_asyncHttpPost = this->getObject();
 
+    AsyncClient * aClient = NULL;
+
     Serial.printf("\nBody: %s\n", g_asyncHttpPost.getData().c_str());
     if (aClient)                                      /* return client already exists */
         return false;
@@ -72,17 +74,17 @@ bool AsyncHttpPost::httpPost() {
         return false;
 
     aClient->onError([](void * arg, AsyncClient * client, int error) {  /* delete client if has an error in sendind data */
-        aClient = NULL;
         delete client;
-    }, NULL);
+        client = NULL;
+    }, args);
 
     aClient->onConnect([](void * arg, AsyncClient * client) {            /* Enter if client connected to cloud */
         Serial.println("Client Connected");
-        aClient->onError(NULL, NULL);
+        client->onError(NULL, NULL);
 
-        client->onDisconnect([](void * arg, AsyncClient * c) {             /* called after data sent or disconnected */
-            aClient = NULL;
-            delete c;
+        client->onDisconnect([](void * arg, AsyncClient *client) {             /* called after data sent or disconnected */
+            delete client;
+            client = NULL;
         }, arg);
 
         client->onData([](void * arg, AsyncClient * c, void * data, size_t len) {  /* called once client receives data as response */
@@ -108,9 +110,8 @@ bool AsyncHttpPost::httpPost() {
     if (!aClient->connect(g_asyncHttpPost.getHost().c_str(), 80)) {                /* connect to cloud server if not connected */
         Serial.printf("\nHost: %s\n", g_asyncHttpPost.getHost().c_str());
         Serial.println("Connect Fail");
-        AsyncClient * client = aClient;
+        delete aClient;
         aClient = NULL;
-        delete client;
         return false;
     }
 
