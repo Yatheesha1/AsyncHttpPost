@@ -3,20 +3,20 @@
 // static AsyncClient * aClient = NULL;
 AsyncHttpPost g_asyncHttpPost;
 
-void AsyncHttpPost::setHost(String host)
+void AsyncHttpPost::setHost(char* host, uint32_t len)
 {
     this->host = host;
 }
 
-void AsyncHttpPost::setApi(String api)
+void AsyncHttpPost::setApi(char* api, uint32_t len)
 {
     this->api = api;
 }
 
-void AsyncHttpPost::setData(String data)
+void AsyncHttpPost::setData(char* data, uint32_t len)
 {
     this->data = data;
-    this->length = data.length();
+    this->length = len;
 }
 
 void AsyncHttpPost::setArgs(void *args)
@@ -33,15 +33,18 @@ AsyncHttpPost AsyncHttpPost::getObject() {
     return *this;
 }
 
-String AsyncHttpPost::getApi() {
+char *AsyncHttpPost::getApi(uint32_t *len) {
+    *len = strlen(this->api);
     return this->api;
 }
 
-String AsyncHttpPost::getHost() {
+char *AsyncHttpPost::getHost(uint32_t *len) {
+    *len = strlen(this->host);
     return this->host;
 }
 
-String AsyncHttpPost::getData() {
+char *AsyncHttpPost::getData(uint32_t *len) {
+    *len = strlen(this->data);
     return this->data;
 }
 
@@ -62,10 +65,11 @@ pfRespOperator AsyncHttpPost::getCallback() {
 /* Start of http request */
 bool AsyncHttpPost::httpPost() {
     g_asyncHttpPost = this->getObject();
+    uint32_t len = 0;
 
     AsyncClient * aClient = NULL;
 
-    Serial.printf("\nBody: %s\n", g_asyncHttpPost.getData().c_str());
+    Serial.printf("\nBody: %s\n", g_asyncHttpPost.getData(&len));
     if (aClient)                                      /* return client already exists */
         return false;
 
@@ -94,21 +98,22 @@ bool AsyncHttpPost::httpPost() {
         }, arg);
 
         Serial.printf("Generating request\n");
+        uint32_t len = 0;
 
         /* request query to send to client */
-        String req = String("POST ") + g_asyncHttpPost.getApi() + " HTTP/1.1\r\n" +
-                    "Host: " + g_asyncHttpPost.getHost() + "\r\n" +
+        String req = String("POST ") + String(g_asyncHttpPost.getApi(&len)) + " HTTP/1.1\r\n" +
+                    "Host: " + String(g_asyncHttpPost.getHost(&len)) + "\r\n" +
                     "Connection: close\r\n" +
                     "Content-Length: " + g_asyncHttpPost.getLength() + "\r\n" +
                     "Content-Type: application/json;charset=UTF-8\r\n\r\n" +
-                    g_asyncHttpPost.getData() + "\r\n";
+                    g_asyncHttpPost.getData(&len) + "\r\n";
         Serial.printf("Request: %s\n", req.c_str());
         client->write(req.c_str());                             /* send the request */
         yield();
     }, args);
 
-    if (!aClient->connect(g_asyncHttpPost.getHost().c_str(), 80)) {                /* connect to cloud server if not connected */
-        Serial.printf("\nHost: %s\n", g_asyncHttpPost.getHost().c_str());
+    if (!aClient->connect(g_asyncHttpPost.getHost(&len), 80)) {                /* connect to cloud server if not connected */
+        Serial.printf("\nHost: %s\n", g_asyncHttpPost.getHost(&len));
         Serial.println("Connect Fail");
         delete aClient;
         aClient = NULL;

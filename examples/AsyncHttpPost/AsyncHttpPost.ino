@@ -1,12 +1,12 @@
 #include <WiFi.h>
 #include "AsyncHttpPost.h"
 
-#define ssid "ssid"
-#define pwd "password"
+#define ssid "JioFi Private"
+#define pwd "robotics"
 
 #define MESSAGE_MAX_LEN 500
-String path = "/post";
-String host = "httpbin.org";
+char* path = "/post";
+char* host = "httpbin.org";
 
 long currentTime = 0;
 int times;
@@ -24,9 +24,9 @@ void respFromServer(void *args, void* data, size_t len) {
 void postToServer(String input) {
     char *args = "Sample arg is char message";
     AsyncHttpPost asyncHttpPost;
-    asyncHttpPost.setApi(path);
-    asyncHttpPost.setHost(host);
-    asyncHttpPost.setData(input);
+    asyncHttpPost.setApi(path, strlen(path));
+    asyncHttpPost.setHost(host, strlen(host));
+    asyncHttpPost.setData((char*)(input.c_str()), input.length());
     asyncHttpPost.setArgs((void*)args);
     asyncHttpPost.setCallback(respFromServer);
 

@@ -7,24 +7,24 @@ typedef void(*pfRespOperator)(void *, void *, size_t);
 
 class AsyncHttpPost {
     public:
-        void setApi(String api);
-        void setHost(String host);
-        void setData(String data);
+        void setApi(char *api, uint32_t len);
+        void setHost(char *host, uint32_t len);
+        void setData(char *data, uint32_t len);
         void setArgs(void *args);
         void setCallback(pfRespOperator callback);
         bool httpPost(void);
         AsyncHttpPost getObject();
-        String getApi();
-        String getHost();
-        String getData();
-        void * getArgs();
+        char *getApi(uint32_t *len);
+        char *getHost(uint32_t *len);
+        char *getData(uint32_t *len);
+        void *getArgs();
         unsigned int getLength();
         pfRespOperator getCallback();
 
     private:
-        String api;
-        String host;
-        String data;
+        char *api;
+        char *host;
+        char *data;
         void *args;
         unsigned int length;
         pfRespOperator resp;
