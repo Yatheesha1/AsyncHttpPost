@@ -3,7 +3,7 @@
 #include <AsyncWebSocket.h>
 
 /* define function poiter type */
-typedef void(*pfRespOperator)(void*, void *, size_t);
+typedef void(*pfRespOperator)(void *, void *, size_t);
 
 class AsyncHttpPost {
     public:
