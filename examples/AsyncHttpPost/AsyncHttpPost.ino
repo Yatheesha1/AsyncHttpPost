@@ -21,12 +21,12 @@ void respFromServer(void *args, void* data, size_t len) {
     Serial.printf("Time --> %d\n", currentTime-times);
 }
 
-void postToServer(String input) {
+void postToServer(char* input) {
     char *args = "Sample arg is char message";
     AsyncHttpPost asyncHttpPost;
     asyncHttpPost.setApi(path, strlen(path));
     asyncHttpPost.setHost(host, strlen(host));
-    asyncHttpPost.setData((char*)(input.c_str()), input.length());
+    asyncHttpPost.setData(input, strlen(input));
     asyncHttpPost.setArgs((void*)args);
     asyncHttpPost.setCallback(respFromServer);
 
@@ -44,9 +44,8 @@ void setup() {
     }
     
     Serial.printf("\nConnected to %s\n", WiFi.SSID().c_str());
-
-    String input_sample = "{\"id\": 1, \"name\": \"Jessa\"}";
-    Serial.printf("\nSample request %s\n", input_sample.c_str());
+    char *input_sample = "{\"id\": 1, \"name\": \"Jessa\"}";
+    Serial.printf("\nSample request %s\n", input_sample);
     postToServer(input_sample);
 }
 
@@ -56,6 +55,13 @@ void loop() {
         input = Serial.readStringUntil('\n');
         Serial.printf("Input: %s\n", input.c_str());
 
-        postToServer(input);
+        int str_len = input.length();
+
+        char *input_sample = (char*)malloc(str_len + 1);
+
+        // Copy it over 
+        input.toCharArray(input_sample, str_len + 1);
+    
+        postToServer(input_sample);
     }
 }

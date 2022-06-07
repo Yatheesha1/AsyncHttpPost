@@ -7,6 +7,7 @@ typedef void(*pfRespOperator)(void *, void *, size_t);
 
 class AsyncHttpPost {
     public:
+        ~AsyncHttpPost();
         void setApi(char *api, uint32_t len);
         void setHost(char *host, uint32_t len);
         void setData(char *data, uint32_t len);
